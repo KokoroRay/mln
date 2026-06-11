@@ -1428,7 +1428,7 @@ const MLN_QUESTIONS = [
   {
     "id": "q_104",
     "chapter": "Đề cương ôn tập chung",
-    "question": "Điền vào chỗ trống: “…” mang tính chất tiêu cực cản trở sự nhận thức đúng đắn của con người về thế giới về xã hội và về bản thân con người nên bị các giai cấp thống trị lợi dụng. ================================= CHƯƠNG 1: KHÁI LUẬN TRIẾT HỌC",
+    "question": "Điền vào chỗ trống: “…” mang tính chất tiêu cực cản trở sự nhận thức đúng đắn của con người về thế giới về xã hội và về bản thân con người nên bị các giai cấp thống trị lợi dụng.",
     "options": [
       "A. Ý thức khoa học.",
       "B. Ý thức tôn giáo.",
@@ -2298,7 +2298,7 @@ const MLN_QUESTIONS = [
   {
     "id": "q_167",
     "chapter": "Chương 1",
-    "question": "Óc tiết ra ý thức như gan tiết ra mật là quan điểm nào? ============================= CHƯƠNG 2 – CHỦ NGHĨA DUY VẬT BIỆN CHỨNG",
+    "question": "Óc tiết ra ý thức như gan tiết ra mật là quan điểm nào?",
     "options": [
       "A. Duy vật tầm thường.",
       "B. Duy tâm khách quan.",
@@ -3521,7 +3521,7 @@ const MLN_QUESTIONS = [
   {
     "id": "q_255",
     "chapter": "Chương 2",
-    "question": "Một trong những vai trò của thực tiễn với nhận thức là? ========================= CHƯƠNG 3: CHỦ NGHĨA DUY VẬT LỊCH SỬ(Chỉ bàn về vấn đề xã hội)",
+    "question": "Một trong những vai trò của thực tiễn với nhận thức là?",
     "options": [
       "A. Thực tiễn là cơ sở nguồn gốc của nhận thức.",
       "B. Thực tiễn là kết quả của nhận thức.",
@@ -5853,7 +5853,7 @@ const MLN_QUESTIONS = [
   {
     "id": "q_423",
     "chapter": "Chương 3",
-    "question": "Nguồn gốc lý luận của chủ nghĩa Mác là: =======================",
+    "question": "Nguồn gốc lý luận của chủ nghĩa Mác là:",
     "options": [
       "A. Triết học cổ điển Đức; kinh tế chính trị cổ điển Anh và chủ nghĩa xã hội không tưởng Pháp.",
       "B. Tư tưởng xã hội phương Đông cổ đại.",
