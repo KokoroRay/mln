@@ -991,7 +991,7 @@ const MLN_QUESTIONS = [
     "chapter": "Đề cương ôn tập chung",
     "question": "Đâu là tác phẩm của Ph.Ăngghen?",
     "options": [
-      "A. Biện chứng của tự nhiên (hoặc biện chứng thiên nhiên cũng đúng)",
+      "A. Biện chứng của tự nhiên",
       "B. Biện chứng của tự do.",
       "C. Tuyên ngôn của Đảng cộng sản.",
       "D. Gia đình thần thánh."
@@ -1034,7 +1034,7 @@ const MLN_QUESTIONS = [
     "question": "Chủ nghĩa duy vật hình thành và phát triển có mấy hình thức cơ bản?",
     "options": [
       "A. Có 2.",
-      "B. Có 3. (có duy vật chất phác; duy vật biện chứng và duy vật lịch sử)",
+      "B. Có 3.",
       "C. Có 4."
     ],
     "correctAnswers": [
@@ -1130,7 +1130,7 @@ const MLN_QUESTIONS = [
     "question": "Theo chủ nghĩa duy vật lịch sử, con người là:",
     "options": [
       "A. Thực thể sinh học.",
-      "B. Thực thể sinh học – xã hội (còn hiểu thực thể tự nhiên xã hội)",
+      "B. Thực thể sinh học – xã hội.",
       "C. Có phần con và phần người.",
       "D. Có thể xác và linh hồn."
     ],
@@ -1145,7 +1145,7 @@ const MLN_QUESTIONS = [
     "options": [
       "A. Hoạt động tinh thần tư tưởng.",
       "B. Hoạt động thực nghiệm khoa học.",
-      "C. Hoạt động sản xuất vật chất (còn hiểu là lao động sản xuất)",
+      "C. Hoạt động sản xuất vật chất.",
       "D. Hoạt động đấu tranh giai cấp."
     ],
     "correctAnswers": [
@@ -1799,11 +1799,11 @@ const MLN_QUESTIONS = [
   {
     "id": "q_131",
     "chapter": "Chương 1",
-    "question": "Theo Ph.Ăngghen, vấn đề cơ bản lớn nhất của mọi triết học là? tại)",
+    "question": "Theo Ph.Ăngghen, vấn đề cơ bản lớn nhất của mọi triết học là?",
     "options": [
       "A. Vật chất.",
       "B. Ý thức.",
-      "C. Mối quan hệ giữa vật chất và ý thức (hiểu cách khác là mối quan hệ giữa tư duy và tồn",
+      "C. Mối quan hệ giữa vật chất và ý thức",
       "D. Giữa vật chất và ý thức."
     ],
     "correctAnswers": [
@@ -1843,7 +1843,7 @@ const MLN_QUESTIONS = [
     "chapter": "Chương 1",
     "question": "Trong quá trình phát triển, chủ nghĩa duy tâm có mấy hình thức cơ bản?",
     "options": [
-      "A. Có 2(là duy tâm chủ quan và duy tâm khách quan)",
+      "A. Có 2",
       "B. Có 3.",
       "C. Có 4.",
       "D. Có 5."
@@ -1885,7 +1885,7 @@ const MLN_QUESTIONS = [
     "chapter": "Chương 1",
     "question": "Trường phái triết học nào thừa nhận chỉ một trong hai thực thể là vật chất hoặc tinh thần là nguồn gốc của thế giới, quyết định sự vận động của thế giới, được gọi là?",
     "options": [
-      "A. Nhất nguyên luận (Nhất nguyên luận có nhất nguyên duy vật và nhất nguyên duy tâm)",
+      "A. Nhất nguyên luận",
       "B. Đa nguyên.",
       "C. Nhị nguyên luận."
     ],
@@ -1911,7 +1911,7 @@ const MLN_QUESTIONS = [
     "chapter": "Chương 1",
     "question": "Việc giải quyết mặt thứ nhất vấn đề cơ bản của triết học đã chia các nhà triết học ra thành mấy trường phái lớn?",
     "options": [
-      "A. 2 (Đó là trường phái CNDV và CNDT)",
+      "A. 2",
       "B. 3.",
       "C. 4.",
       "D. 5."
@@ -1965,7 +1965,7 @@ const MLN_QUESTIONS = [
   {
     "id": "q_143",
     "chapter": "Chương 1",
-    "question": "Tục ngữ ViệtNam có câu: Cha mẹ sinh con, trời sinh tính (hiểu trời ở đây không phải là trời xanh không phải là môi trường điều kiện, mà trời theo quan niệm nho giáo là mệnh trời, số trời, ý trời đạo trời xem ông trời là thượng đế) là quan điểm thuộc trường phái triết học nào?",
+    "question": "Tục ngữ ViệtNam có câu: Cha mẹ sinh con, trời sinh tính là quan điểm thuộc trường phái triết học nào?",
     "options": [
       "A. Chủ nghĩa duy tâm chủ quan.",
       "B. Chủ nghĩa duy tâm khách quan.",
@@ -2343,7 +2343,7 @@ const MLN_QUESTIONS = [
     "question": "Sai lầm chủ yếu các quan niệm duy vật trước Mác về vật chất là gì?",
     "options": [
       "A. Đồng nhất vật chất với tồn tại.",
-      "B. Quy vật chất về một dạng cụ thể (Hiểu là đồng nhất vật chất với vật thể)",
+      "B. Quy vật chất về một dạng cụ thể.",
       "C. Đồng nhất vật chất với hiện thực.",
       "D. Đồng nhất vật chất với tinh thần."
     ],
@@ -2706,7 +2706,7 @@ const MLN_QUESTIONS = [
     "options": [
       "A. Điểm nút.",
       "B. Độ.",
-      "C. Bước nhảy(hiểu là nhảy vọt cũng được)",
+      "C. Bước nhảy",
       "D. Lượng."
     ],
     "correctAnswers": [
@@ -2842,7 +2842,7 @@ const MLN_QUESTIONS = [
   {
     "id": "q_206",
     "chapter": "Chương 2",
-    "question": "Quy luật nào của phép biện chứng duy vật làm rõ phương thức (còn hiểu là cách thức chung) của mọi sự vận động, phát triển trong tự nhiên xã hội và tư duy? về chất và ngược lại.",
+    "question": "Quy luật nào của phép biện chứng duy vật làm rõ phương thức của mọi sự vận động, phát triển trong tự nhiên xã hội và tư duy? về chất và ngược lại.",
     "options": [
       "A. Quy luật thống nhất và đấu tranh giữa các mặt đối lập.",
       "B. Quy luật chuyển hóa từ những thay đổi về lượng thành những thay đổi",
@@ -3457,7 +3457,7 @@ const MLN_QUESTIONS = [
       "A. Khái niệm.",
       "B. Biểu tượng.",
       "C. Cảm giác.",
-      "D. Suy luận (còn hiểu là suy lý)"
+      "D. Suy luận"
     ],
     "correctAnswers": [
       "D"
@@ -3636,7 +3636,7 @@ const MLN_QUESTIONS = [
     "question": "Quan hệ sản xuất là gì?",
     "options": [
       "A. Mối quan hệ con người với đối tượng sản xuất.",
-      "B. Mối quan hệ con người với công cụ sản xuất(hiểu là công cụ lao động).",
+      "B. Mối quan hệ con người với công cụ sản xuất.",
       "C. Mối quan hệ người với người trong quá trình sản xuất vật chất.",
       "D. Mối quan hệ con người với tư liệu sản xuất."
     ],
@@ -3675,7 +3675,7 @@ const MLN_QUESTIONS = [
   {
     "id": "q_266",
     "chapter": "Chương 3",
-    "question": "Lực lượng sản xuất bao gồm các thành phần(hiểu nhân tố) nào?",
+    "question": "Lực lượng sản xuất bao gồm các thành phần nào?",
     "options": [
       "A. Người lao động và tư liệu sản xuất.",
       "B. Người lao động và công cụ lao động.",
@@ -3792,7 +3792,7 @@ const MLN_QUESTIONS = [
       "A. Tính tất yếu của tồn tại xã hội với ý thức xã hội.",
       "B. Kiến trúc thượng tầng nãy sinh trên cơ sở hạ tầng.",
       "C. Tính tất yếu kinh tế đối với toàn bộ các lĩnh vực sinh hoạt của xã hội.",
-      "D. Kiến trúc thượng tầng phản ánh cơ sở hạ tầng(hiểu là kinh tế quyết định chính trị)"
+      "D. Kiến trúc thượng tầng phản ánh cơ sở hạ tầng"
     ],
     "correctAnswers": [
       "D"
@@ -4027,9 +4027,9 @@ const MLN_QUESTIONS = [
     "chapter": "Chương 3",
     "question": "Theo C.Mác trong tính hiện thực của nó, bản chất con người là?",
     "options": [
-      "C. Mác trong tính hiện thực của nó, bản chất con người là?",
       "A. Tổng hòa các(những) quan hệ xã hội.",
       "B. Tính thiện.",
+      "C. Tính thiện/ác",
       "D. Tổng hòa các quan hệ."
     ],
     "correctAnswers": [
@@ -4055,7 +4055,7 @@ const MLN_QUESTIONS = [
     "chapter": "Chương 3",
     "question": "Cơ sở trực tiếp hình thành và phân chia giai cấp trong xã hội là do:",
     "options": [
-      "A. Chiếm đoạt tư liệu sản xuất của công thành của riêng (hiểu cách khác sự xuất hiện chế độ tư hữu)",
+      "A. Chiếm đoạt tư liệu sản xuất của công thành của riêng",
       "B. Chiến tranh của các bộ lạc.",
       "C. Sản xuất ngày càng phát triển.",
       "D. Của cải trong xã hội ngày càng nhiều."
@@ -4095,11 +4095,11 @@ const MLN_QUESTIONS = [
   {
     "id": "q_296",
     "chapter": "Chương 3",
-    "question": "Điền vào chỗ trống: Tiến trình phát triển của lịch sử loài người chính là sự thay thế lẫn nhau giữa các hình thái kinh tế - xã hội là một quá trình “…”.",
+    "question": "Điền vào chỗ trống: Tiến trình phát triển của lịch sử loài người chính là sự thay thế lẫn nhau giữa các hình thái kinh tế - xã hội là một quá trình “…”",
     "options": [
       "A. Xã hội tự nhiên.",
       "B. Tự nhiên xã hội.",
-      "C. Lịch sử tự nhiên (Nghĩa là quan hệ sản xuất phù hợp với trình độ của lực lượng sản xuất)",
+      "C. Lịch sử tự nhiên.",
       "D. Lịch sử xã hội."
     ],
     "correctAnswers": [
@@ -4359,7 +4359,7 @@ const MLN_QUESTIONS = [
     "chapter": "Chương 3",
     "question": "Sản xuất vật chất là quá trình con người sử dụng “…” tác động vào tự nhiên, cải biến các dạng vật chất của giới tự nhiên nhằm tạo ra của cải vật chất thỏa mãn nhu cầu tồn tại và phát triển của con người. Từ còn thiếu là?",
     "options": [
-      "A. Công cụ lao động (còn hiểu là công cụ sản xuất)",
+      "A. Công cụ lao động",
       "B. Đối tượng lao động.",
       "C. Sức mạnh của con người.",
       "D. Năng suất lao động."
@@ -4526,13 +4526,13 @@ const MLN_QUESTIONS = [
     "chapter": "Chương 3",
     "question": "Theo C.Mác, sự phát triển của các hình thái kinh tế xã hội là một quá trình lịch sử tự nhiên. Nghĩa là:",
     "options": [
-      "C. Mác, sự phát triển của các hình thái kinh tế xã hội là một quá",
       "A. Sự phát triển của lịch sử nhân loại chỉ do các quy luật tự nhiên chi phối.",
       "B. Sự phát triển của lịch sử nhân loại theo mục đích đã được định sẵn của lực lượng siêu tự nhiên.",
-      "D. Sự phát triển của lịch sử nhân loại về cơ bản chịu sự tác động của các quy luật khách quan. (Quy luật khách quan hiểu là QHSX phù hợp trình độ phát triển của LLSX)"
+      "C. Sự phát triển của lịch sử nhân loại về cơ bản chịu sự tác động của các quy luật khách quan",
+      "D. Sự phát triển của lịch sử nhân loại về cơ bản chịu sự tác động của con người"
     ],
     "correctAnswers": [
-      "D"
+      "C"
     ]
   },
   {
@@ -5530,7 +5530,7 @@ const MLN_QUESTIONS = [
   {
     "id": "q_400",
     "chapter": "Chương 3",
-    "question": "Thời Tây Âu cổ đại(Hiểu thời trung cổ) là nền triết học gì?",
+    "question": "Thời Tây Âu cổ đại là nền triết học gì?",
     "options": [
       "A. Triết học kinh viện.",
       "B. Triết học tự nhiên.",
@@ -5603,7 +5603,7 @@ const MLN_QUESTIONS = [
     "options": [
       "A. Lao động và ngôn ngữ.",
       "B. Nghiên cứu khoa học.",
-      "C. Bộ não(còn hiểu bộ óc) người.",
+      "C. Bộ não người.",
       "D. Các sự vật hiện tượng trong thế giới khách quan."
     ],
     "correctAnswers": [
