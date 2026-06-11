@@ -681,6 +681,23 @@ h1, h2, h3, h4, h5, h6 {
   color: white;
 }
 
+.grid-shuffle-btn {
+  padding: 6px 12px;
+  background-color: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--accent-color);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.grid-shuffle-btn:hover {
+  background-color: var(--accent-color);
+  color: white;
+}
+
 .nav-circles-container {
   max-height: 380px;
   overflow-y: auto;

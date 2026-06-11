@@ -453,9 +453,9 @@ const MLN_QUESTIONS = [
     "chapter": "Đề cương ôn tập chung",
     "question": "Phát minh vĩ đại của C.Mác đem lại một cuộc cách mạng trong triết học về xã hội là:",
     "options": [
-      "C. Mác đem lại một cuộc cách mạng trong triết học về xã hội là:",
       "A. Chủ nghĩa duy vật.",
-      "B. Chủ nghĩa duy vật lịch sử."
+      "B. Chủ nghĩa duy vật lịch sử.",
+      "C. Chủ nghĩa duy vật chất phát."
     ],
     "correctAnswers": [
       "B"
@@ -1442,7 +1442,7 @@ const MLN_QUESTIONS = [
   {
     "id": "q_105",
     "chapter": "Chương 1",
-    "question": "Triết học Mác - Lênin ra đời một phần là kết quả kế thừa trực tiếp từ đâu? A. Thế giới quan duy vật của Hêghen và phép biện chứng của Phoiơbắc",
+    "question": "Triết học Mác - Lênin ra đời một phần là kết quả kế thừa trực tiếp từ đâu?",
     "options": [
       "A. Thế giới quan duy vật của Hêghen và phép biện chứng của Phoiơbắc",
       "B. Thế giới quan duy vật của Phơbách và phép biện chứng của Hêghen",

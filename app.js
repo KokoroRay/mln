@@ -14,6 +14,7 @@ let state = {
   filterStatus: 'all',    // 'all', 'unanswered', 'correct', 'incorrect', 'bookmarked'
   examSubmitted: {},      // chapter_name or 'custom_quiz' -> boolean (if true, exam is graded)
   checkedQuestions: {},   // q_id -> boolean (if true, multi-select is checked in practice mode)
+  shuffledChapterQuestions: {}, // chapter_name -> array of shuffled question IDs
   
   // Custom quiz generator config
   customScope: 'all',
@@ -86,6 +87,13 @@ function loadStateFromStorage() {
   } else {
     state.checkedQuestions = {};
   }
+
+  const storedShuffled = localStorage.getItem('mln_shuffled_chapters');
+  if (storedShuffled) {
+    state.shuffledChapterQuestions = JSON.parse(storedShuffled);
+  } else {
+    state.shuffledChapterQuestions = {};
+  }
 }
 
 function saveStateToStorage() {
@@ -96,6 +104,7 @@ function saveStateToStorage() {
   localStorage.setItem('mln_bookmarks', JSON.stringify(state.bookmarks));
   localStorage.setItem('mln_exam_submitted', JSON.stringify(state.examSubmitted));
   localStorage.setItem('mln_checked', JSON.stringify(state.checkedQuestions));
+  localStorage.setItem('mln_shuffled_chapters', JSON.stringify(state.shuffledChapterQuestions));
 }
 
 // --- INIT APP ---
@@ -207,7 +216,12 @@ function updateActiveQuestions() {
   } else {
     // It's a chapter tab
     const chapterName = TAB_MAP[state.currentTab];
-    list = MLN_QUESTIONS.filter(q => q.chapter === chapterName);
+    if (state.mode === 'exam' && state.shuffledChapterQuestions && state.shuffledChapterQuestions[chapterName]) {
+      const shuffledIds = state.shuffledChapterQuestions[chapterName];
+      list = shuffledIds.map(id => MLN_QUESTIONS.find(q => q.id === id)).filter(Boolean);
+    } else {
+      list = MLN_QUESTIONS.filter(q => q.chapter === chapterName);
+    }
   }
 
   // Apply search query
@@ -482,7 +496,12 @@ function renderQuizView(container) {
       <div class="quiz-nav-sidebar glass" style="padding: 24px;">
         <div class="nav-grid-header">
           <h3>Bản đồ Câu hỏi</h3>
-          <button class="grid-reset-btn" id="reset-chapter-btn">Làm lại</button>
+          <div style="display: flex; gap: 6px;">
+            ${state.mode === 'exam' && state.currentTab !== 'bookmarks' && state.currentTab !== 'custom_quiz' ? `
+              <button class="grid-shuffle-btn" onclick="shuffleChapterExam()">🎲 Trộn đề</button>
+            ` : ''}
+            <button class="grid-reset-btn" id="reset-chapter-btn">Làm lại</button>
+          </div>
         </div>
         
         <div class="nav-circles-container" id="nav-circles-grid">
@@ -613,7 +632,7 @@ window.setMode = function(mode) {
     mainTitle.innerText = mode === 'practice' ? 'Đề luyện tập tự chọn' : 'Đề thi thử tùy chỉnh';
   }
 
-  renderActiveQuestion();
+  renderContent();
   showToast(`Đã chuyển sang chế độ ${mode === 'practice' ? 'Luyện tập (Xem đáp án ngay)' : 'Thi thử (Không xem đáp án ngay)'}`);
 };
 
@@ -1104,6 +1123,34 @@ window.resetExamMode = function(chapterName) {
   showToast('Đã đặt lại bài thi!');
 };
 
+// --- SHUFFLE EXAM QUESTIONS FOR CHAPTER ---
+window.shuffleChapterExam = function() {
+  const chapterName = TAB_MAP[state.currentTab];
+  if (!chapterName) return;
+  
+  const confirmShuffle = confirm(`Bạn muốn xáo trộn các câu hỏi của chương "${chapterName}" để bắt đầu một bài thi thử ngẫu nhiên mới? (Hành động này sẽ xoá các đáp án thi thử hiện tại của chương này)`);
+  if (!confirmShuffle) return;
+  
+  const chQuestions = MLN_QUESTIONS.filter(q => q.chapter === chapterName);
+  chQuestions.forEach(q => {
+    delete state.examAnswers[q.id];
+    delete state.checkedQuestions[q.id];
+  });
+  state.examSubmitted[chapterName] = false;
+  
+  // Shuffle
+  const shuffled = shuffleArray(chQuestions);
+  state.shuffledChapterQuestions[chapterName] = shuffled.map(q => q.id);
+  
+  saveStateToStorage();
+  
+  state.activeQuestions = shuffled;
+  state.currentIndex = 0;
+  
+  renderActiveQuestion();
+  showToast('Đã xáo trộn đề thi ngẫu nhiên cho chương!');
+};
+
 // --- RESET PROGRESS FUNCTIONS ---
 window.resetChapterProgress = function() {
   if (state.currentTab === 'dashboard') return;
@@ -1151,6 +1198,11 @@ window.resetChapterProgress = function() {
     });
     // Reset exam status for this chapter
     state.examSubmitted[chapterName] = false;
+    
+    // Clear shuffled state if resetting in exam mode
+    if (state.mode === 'exam' && state.shuffledChapterQuestions) {
+      delete state.shuffledChapterQuestions[chapterName];
+    }
   }
 
   saveStateToStorage();
@@ -1170,6 +1222,7 @@ window.resetAllProgress = function() {
   state.bookmarks = [];
   state.examSubmitted = {};
   state.checkedQuestions = {};
+  state.shuffledChapterQuestions = {};
   
   saveStateToStorage();
   
