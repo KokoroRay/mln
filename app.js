@@ -2,17 +2,23 @@
 
 // --- STATE MANAGEMENT ---
 let state = {
-  currentTab: 'dashboard', // 'dashboard', 'c0', 'c1', 'c2', 'c3', 'bookmarks'
+  currentTab: 'dashboard', // 'dashboard', 'c0', 'c1', 'c2', 'c3', 'bookmarks', 'custom_quiz'
   currentIndex: 0,        // index of current question in active list
   activeQuestions: [],    // filtered list of questions for current tab
-  userAnswers: {},        // q_id -> array of chosen options (e.g. ['A'])
+  practiceAnswers: {},    // q_id -> array of chosen options in practice mode
+  examAnswers: {},        // q_id -> array of chosen options in exam mode
   bookmarks: [],          // array of q_id
   mode: 'practice',       // 'practice' or 'exam'
   theme: 'dark',          // 'dark' or 'light'
   searchQuery: '',
   filterStatus: 'all',    // 'all', 'unanswered', 'correct', 'incorrect', 'bookmarked'
-  examSubmitted: {},      // chapter_name -> boolean (if true, exam is graded)
-  checkedQuestions: {}    // q_id -> boolean (if true, multi-select is checked in practice mode)
+  examSubmitted: {},      // chapter_name or 'custom_quiz' -> boolean (if true, exam is graded)
+  checkedQuestions: {},   // q_id -> boolean (if true, multi-select is checked in practice mode)
+  
+  // Custom quiz generator config
+  customScope: 'all',
+  customCount: '20',
+  customOrder: 'random'
 };
 
 // --- CONSTANTS ---
@@ -23,6 +29,16 @@ const TAB_MAP = {
   'c3': 'Chương 3'
 };
 
+// --- HELPER SHUFFLE FUNCTION ---
+function shuffleArray(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 // --- LOCAL STORAGE UTILITIES ---
 function loadStateFromStorage() {
   const storedTheme = localStorage.getItem('mln_theme');
@@ -31,16 +47,31 @@ function loadStateFromStorage() {
   const storedMode = localStorage.getItem('mln_mode');
   if (storedMode) state.mode = storedMode;
   
-  const storedAnswers = localStorage.getItem('mln_answers');
-  if (storedAnswers) {
-    const parsed = JSON.parse(storedAnswers);
+  const storedPracticeAnswers = localStorage.getItem('mln_practice_answers');
+  if (storedPracticeAnswers) {
+    const parsed = JSON.parse(storedPracticeAnswers);
     // Backward compatibility: migrate legacy string answers to arrays
     for (let key in parsed) {
       if (typeof parsed[key] === 'string') {
         parsed[key] = [parsed[key]];
       }
     }
-    state.userAnswers = parsed;
+    state.practiceAnswers = parsed;
+  } else {
+    state.practiceAnswers = {};
+  }
+
+  const storedExamAnswers = localStorage.getItem('mln_exam_answers');
+  if (storedExamAnswers) {
+    const parsed = JSON.parse(storedExamAnswers);
+    for (let key in parsed) {
+      if (typeof parsed[key] === 'string') {
+        parsed[key] = [parsed[key]];
+      }
+    }
+    state.examAnswers = parsed;
+  } else {
+    state.examAnswers = {};
   }
   
   const storedBookmarks = localStorage.getItem('mln_bookmarks');
@@ -60,7 +91,8 @@ function loadStateFromStorage() {
 function saveStateToStorage() {
   localStorage.setItem('mln_theme', state.theme);
   localStorage.setItem('mln_mode', state.mode);
-  localStorage.setItem('mln_answers', JSON.stringify(state.userAnswers));
+  localStorage.setItem('mln_practice_answers', JSON.stringify(state.practiceAnswers));
+  localStorage.setItem('mln_exam_answers', JSON.stringify(state.examAnswers));
   localStorage.setItem('mln_bookmarks', JSON.stringify(state.bookmarks));
   localStorage.setItem('mln_exam_submitted', JSON.stringify(state.examSubmitted));
   localStorage.setItem('mln_checked', JSON.stringify(state.checkedQuestions));
@@ -132,6 +164,26 @@ function switchTab(tabId) {
   // Setup active question list
   updateActiveQuestions();
   
+  // Dynamic header updates
+  const mainTitle = document.getElementById('header-main-title');
+  const subTitle = document.getElementById('header-sub-title');
+  if (mainTitle && subTitle) {
+    if (tabId === 'dashboard') {
+      mainTitle.innerText = 'Trắc nghiệm MLN111';
+      subTitle.innerText = 'Chào mừng bạn đến với hệ thống ôn tập kiến thức Triết học Mác - Lênin.';
+    } else if (tabId === 'bookmarks') {
+      mainTitle.innerText = 'Câu hỏi đã lưu';
+      subTitle.innerText = 'Danh sách các câu hỏi khó bạn đã lưu lại để ôn tập.';
+    } else if (tabId === 'custom_quiz') {
+      mainTitle.innerText = state.mode === 'practice' ? 'Đề luyện tập tự chọn' : 'Đề thi thử tùy chỉnh';
+      subTitle.innerText = `Đề thi gồm ${state.activeQuestions.length} câu hỏi ngẫu nhiên được tổng hợp theo yêu cầu.`;
+    } else {
+      const chapterName = TAB_MAP[tabId];
+      mainTitle.innerText = chapterName;
+      subTitle.innerText = `Luyện tập các câu hỏi trắc nghiệm thuộc phần: ${chapterName}.`;
+    }
+  }
+
   // Render Tab Content
   renderContent();
 }
@@ -142,6 +194,11 @@ function updateActiveQuestions() {
   
   if (state.currentTab === 'dashboard') {
     state.activeQuestions = [];
+    return;
+  }
+  
+  if (state.currentTab === 'custom_quiz') {
+    // Active questions are pre-generated by the custom builder
     return;
   }
   
@@ -165,7 +222,7 @@ function updateActiveQuestions() {
   // Apply status filter
   if (state.filterStatus !== 'all') {
     list = list.filter(q => {
-      const answers = state.userAnswers[q.id] || [];
+      const answers = (state.mode === 'practice' ? state.practiceAnswers : state.examAnswers)[q.id] || [];
       const hasAnswered = answers.length > 0;
       
       const isCorrect = hasAnswered && 
@@ -201,33 +258,39 @@ function renderContent() {
 function renderDashboard(container) {
   // Statistics Calculations
   const totalQs = MLN_QUESTIONS.length;
-  const answeredIds = Object.keys(state.userAnswers).filter(id => state.userAnswers[id] && state.userAnswers[id].length > 0);
-  const totalAnswered = answeredIds.length;
   
-  let totalCorrect = 0;
+  // Calculate practice mode stats
+  const practiceAnsweredIds = Object.keys(state.practiceAnswers).filter(id => state.practiceAnswers[id] && state.practiceAnswers[id].length > 0);
+  const practiceAnswered = practiceAnsweredIds.length;
+  let practiceCorrect = 0;
   MLN_QUESTIONS.forEach(q => {
-    const answers = state.userAnswers[q.id] || [];
-    const hasAnswered = answers.length > 0;
-    const isCorrect = hasAnswered && 
-      answers.every(ans => q.correctAnswers.includes(ans)) && 
-      q.correctAnswers.every(ans => answers.includes(ans));
-      
-    if (isCorrect) {
-      totalCorrect++;
+    const answers = state.practiceAnswers[q.id] || [];
+    if (answers.length > 0 && answers.every(ans => q.correctAnswers.includes(ans)) && q.correctAnswers.every(ans => answers.includes(ans))) {
+      practiceCorrect++;
+    }
+  });
+
+  // Calculate exam mode stats
+  const examAnsweredIds = Object.keys(state.examAnswers).filter(id => state.examAnswers[id] && state.examAnswers[id].length > 0);
+  const examAnswered = examAnsweredIds.length;
+  let examCorrect = 0;
+  MLN_QUESTIONS.forEach(q => {
+    const answers = state.examAnswers[q.id] || [];
+    if (answers.length > 0 && answers.every(ans => q.correctAnswers.includes(ans)) && q.correctAnswers.every(ans => answers.includes(ans))) {
+      examCorrect++;
     }
   });
   
-  const totalIncorrect = totalAnswered - totalCorrect;
-  const overallPercentage = totalQs > 0 ? Math.round((totalAnswered / totalQs) * 100) : 0;
-  const correctPercentage = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+  const overallPercentage = totalQs > 0 ? Math.round(((practiceAnswered + examAnswered) / (totalQs * 2)) * 100) : 0;
 
   // Render Dashboard HTML
   let html = `
     <div class="dashboard-view">
+      <!-- Welcome Banner -->
       <div class="stats-card-large glass">
         <div class="welcome-info">
           <h3>Hệ thống Ôn thi MLN111</h3>
-          <p>Dựa trên Đề cương ôn thi Triết học Mác - Lênin. Hệ thống tự động chia các câu hỏi có 1 đáp án và câu hỏi có nhiều đáp án (2 đáp án trở lên), lưu trữ tiến độ trên trình duyệt của bạn.</p>
+          <p>Dựa trên Đề cương ôn thi Triết học Mác - Lênin. Hỗ trợ câu hỏi nhiều đáp án, lưu tiến trình riêng biệt cho <b>Luyện tập</b> và <b>Thi thử</b>.</p>
           <div style="display: flex; gap: 12px;">
             <button class="action-btn primary" onclick="switchTab('c0')">Bắt đầu Ôn ngay</button>
             <button class="action-btn secondary" onclick="switchTab('bookmarks')">⭐ Xem câu đã lưu (${state.bookmarks.length})</button>
@@ -240,11 +303,62 @@ function renderDashboard(container) {
           </svg>
           <div class="chart-percentage">
             ${overallPercentage}%
-            <span>Đã làm</span>
+            <span>Tiến độ</span>
           </div>
         </div>
       </div>
 
+      <!-- Custom Quiz Generator Card (Randomizer) -->
+      <div class="custom-quiz-builder glass" style="padding: 24px; margin-bottom: 32px;">
+        <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px; font-family: 'Outfit';">🎲 Bộ tạo đề ôn tập & Thi thử tự do</h3>
+        <div class="builder-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; align-items: flex-end;">
+          
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Phạm vi câu hỏi</label>
+            <select id="custom-scope" class="search-input" style="padding-left: 12px; height: 42px;">
+              <option value="all">Tất cả câu hỏi (423 câu)</option>
+              <option value="c0">Đề cương ôn tập chung (104 câu)</option>
+              <option value="c1">Chương 1: Khái luận triết học (63 câu)</option>
+              <option value="c2">Chương 2: CNDV Biện chứng (88 câu)</option>
+              <option value="c3">Chương 3: CNDV Lịch sử (168 câu)</option>
+              <option value="bookmarks">Câu hỏi đã đánh dấu (Lưu)</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Chế độ thi</label>
+            <select id="custom-mode" class="search-input" style="padding-left: 12px; height: 42px;">
+              <option value="practice">🕹️ Luyện tập (Xem kết quả ngay)</option>
+              <option value="exam">📝 Thi thử (Chấm điểm khi nộp)</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Số lượng câu hỏi</label>
+            <select id="custom-count" class="search-input" style="padding-left: 12px; height: 42px;">
+              <option value="10">10 câu</option>
+              <option value="20" selected>20 câu</option>
+              <option value="50">50 câu</option>
+              <option value="100">100 câu</option>
+              <option value="all">Tất cả câu</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Thứ tự xuất hiện</label>
+            <select id="custom-order" class="search-input" style="padding-left: 12px; height: 42px;">
+              <option value="random" selected>Xáo trộn ngẫu nhiên</option>
+              <option value="default">Thứ tự mặc định</option>
+            </select>
+          </div>
+
+          <button class="action-btn primary" onclick="startCustomQuiz()" style="height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+            Tạo đề thi
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
       <div class="dashboard-grid">
         <div class="summary-card glass">
           <div class="card-icon total">📚</div>
@@ -254,24 +368,24 @@ function renderDashboard(container) {
           </div>
         </div>
         <div class="summary-card glass">
-          <div class="card-icon correct">✅</div>
+          <div class="card-icon correct">🕹️</div>
           <div class="card-info">
-            <span class="value">${totalCorrect}</span>
-            <span class="label">Số câu đúng (${correctPercentage}%)</span>
+            <span class="value">${practiceCorrect}/${totalQs}</span>
+            <span class="label">Luyện tập (Đúng)</span>
           </div>
         </div>
         <div class="summary-card glass">
-          <div class="card-icon incorrect">❌</div>
+          <div class="card-icon incorrect">📝</div>
           <div class="card-info">
-            <span class="value">${totalIncorrect}</span>
-            <span class="label">Số câu sai</span>
+            <span class="value">${examCorrect}/${totalQs}</span>
+            <span class="label">Thi thử (Đúng)</span>
           </div>
         </div>
         <div class="summary-card glass">
           <div class="card-icon progress">⭐</div>
           <div class="card-info">
             <span class="value">${state.bookmarks.length}</span>
-            <span class="label">Đã đánh dấu</span>
+            <span class="label">Đã lưu (Bookmarks)</span>
           </div>
         </div>
       </div>
@@ -289,15 +403,16 @@ function renderDashboard(container) {
   ];
 
   chapters.forEach(ch => {
-    // Count stats for this chapter
     const chapterName = ch.id === 'c0' ? 'Đề cương ôn tập chung' : ch.name.split(':')[0];
     const chQuestions = MLN_QUESTIONS.filter(q => q.chapter === chapterName);
     const chTotal = chQuestions.length;
     
+    // Display stats based on active mode
+    const answers = state.mode === 'practice' ? state.practiceAnswers : state.examAnswers;
     let chAnswered = 0;
     chQuestions.forEach(q => {
-      const answers = state.userAnswers[q.id] || [];
-      if (answers.length > 0) chAnswered++;
+      const ans = answers[q.id] || [];
+      if (ans.length > 0) chAnswered++;
     });
     
     const pct = chTotal > 0 ? Math.round((chAnswered / chTotal) * 100) : 0;
@@ -323,7 +438,7 @@ function renderDashboard(container) {
       <div class="danger-zone-card glass">
         <div class="danger-info">
           <h4>Vùng nguy hiểm</h4>
-          <p>Hành động này sẽ xóa toàn bộ lịch sử làm bài, điểm số và các câu hỏi đã lưu trên trình duyệt này.</p>
+          <p>Hành động này sẽ xóa toàn bộ lịch sử làm bài (cả hai chế độ), điểm số và các câu hỏi đã lưu trên trình duyệt này.</p>
         </div>
         <button class="grid-reset-btn" onclick="resetAllProgress()">Xoá hết tiến trình</button>
       </div>
@@ -335,8 +450,6 @@ function renderDashboard(container) {
 
 // --- QUIZ VIEW RENDER ---
 function renderQuizView(container) {
-  const tabName = state.currentTab === 'bookmarks' ? 'Câu hỏi đã đánh dấu' : TAB_MAP[state.currentTab];
-  
   let html = `
     <div class="quiz-grid-layout">
       <!-- Quiz Main Area -->
@@ -344,7 +457,7 @@ function renderQuizView(container) {
         <!-- Progress Bar at top of quiz -->
         <div class="progress-bar-container glass" style="padding: 20px;">
           <div class="progress-info">
-            <span>Tiến độ chương:</span>
+            <span>Tiến độ câu hỏi:</span>
             <span id="progress-percentage-text">0% (0/0 câu)</span>
           </div>
           <div class="progress-track">
@@ -418,15 +531,18 @@ function setupHeaderControls() {
 
   // Controls include Search input, Filters (All, Unanswered, Correct, Incorrect, Saved), and Mode toggle
   const isBookmarkedTab = state.currentTab === 'bookmarks';
+  const isCustomQuiz = state.currentTab === 'custom_quiz';
   
   let html = `
     <div class="quiz-controls">
       <div class="controls-left">
-        <!-- Search bar -->
-        <div class="search-wrapper">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="search-questions" class="search-input" placeholder="Tìm kiếm câu hỏi..." value="${state.searchQuery}">
-        </div>
+        <!-- Search bar (disabled for custom_quiz to avoid breaking custom lists) -->
+        ${!isCustomQuiz ? `
+          <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search-questions" class="search-input" placeholder="Tìm kiếm câu hỏi..." value="${state.searchQuery}">
+          </div>
+        ` : ''}
 
         <!-- Filter tabs -->
         <div class="filter-tabs">
@@ -436,7 +552,7 @@ function setupHeaderControls() {
             <button class="filter-btn ${state.filterStatus === 'correct' ? 'active' : ''}" onclick="setFilterStatus('correct')">Đúng</button>
             <button class="filter-btn ${state.filterStatus === 'incorrect' ? 'active' : ''}" onclick="setFilterStatus('incorrect')">Sai</button>
           ` : ''}
-          <button class="filter-btn ${state.filterStatus === 'bookmarked' ? 'active' : ''}" onclick="setFilterStatus('bookmarked')">Đã đánh dấu</button>
+          <button class="filter-btn ${state.filterStatus === 'bookmarked' ? 'active' : ''}" onclick="setFilterStatus('bookmarked')">Đã lưu</button>
         </div>
       </div>
 
@@ -453,14 +569,16 @@ function setupHeaderControls() {
   headerActions.innerHTML = html;
 
   // Search input event
-  const searchInput = document.getElementById('search-questions');
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      state.searchQuery = e.target.value;
-      updateActiveQuestions();
-      state.currentIndex = 0;
-      renderActiveQuestion();
-    });
+  if (!isCustomQuiz) {
+    const searchInput = document.getElementById('search-questions');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value;
+        updateActiveQuestions();
+        state.currentIndex = 0;
+        renderActiveQuestion();
+      });
+    }
   }
 }
 
@@ -468,7 +586,11 @@ function setupHeaderControls() {
 window.setFilterStatus = function(status) {
   state.filterStatus = status;
   setupHeaderControls();
-  updateActiveQuestions();
+  
+  if (state.currentTab !== 'custom_quiz') {
+    updateActiveQuestions();
+  }
+  
   state.currentIndex = 0;
   renderActiveQuestion();
 };
@@ -477,8 +599,87 @@ window.setMode = function(mode) {
   if (state.mode === mode) return;
   state.mode = mode;
   setupHeaderControls();
+  
+  // Reload active questions if we are filtering, because filters are mode-dependent
+  if (state.currentTab !== 'custom_quiz') {
+    updateActiveQuestions();
+  }
+  
+  state.currentIndex = 0;
+  
+  // Update header title in case it is custom quiz
+  const mainTitle = document.getElementById('header-main-title');
+  if (mainTitle && state.currentTab === 'custom_quiz') {
+    mainTitle.innerText = mode === 'practice' ? 'Đề luyện tập tự chọn' : 'Đề thi thử tùy chỉnh';
+  }
+
   renderActiveQuestion();
   showToast(`Đã chuyển sang chế độ ${mode === 'practice' ? 'Luyện tập (Xem đáp án ngay)' : 'Thi thử (Không xem đáp án ngay)'}`);
+};
+
+// --- CUSTOM QUIZ BUILDER ---
+window.startCustomQuiz = function() {
+  const scope = document.getElementById('custom-scope').value;
+  const countVal = document.getElementById('custom-count').value;
+  const order = document.getElementById('custom-order').value;
+  const mode = document.getElementById('custom-mode').value;
+  
+  state.customScope = scope;
+  state.customCount = countVal;
+  state.customOrder = order;
+  state.mode = mode;
+  
+  // Fetch scope list
+  let list = [];
+  if (scope === 'all') {
+    list = [...MLN_QUESTIONS];
+  } else if (scope === 'bookmarks') {
+    list = MLN_QUESTIONS.filter(q => state.bookmarks.includes(q.id));
+  } else {
+    const chapterName = TAB_MAP[scope];
+    list = MLN_QUESTIONS.filter(q => q.chapter === chapterName);
+  }
+  
+  if (list.length === 0) {
+    alert('Không tìm thấy câu hỏi nào trong phạm vi được chọn!');
+    return;
+  }
+  
+  // Apply shuffle
+  if (order === 'random') {
+    list = shuffleArray(list);
+  }
+  
+  // Limit count
+  if (countVal !== 'all') {
+    const limit = parseInt(countVal, 10);
+    list = list.slice(0, limit);
+  }
+  
+  state.activeQuestions = list;
+  state.currentTab = 'custom_quiz';
+  state.currentIndex = 0;
+  state.searchQuery = '';
+  state.filterStatus = 'all';
+  state.examSubmitted['custom_quiz'] = false;
+  
+  saveStateToStorage();
+  
+  // Clear sidebar active highlights
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.remove('active');
+  });
+
+  // Update headers
+  const mainTitle = document.getElementById('header-main-title');
+  const subTitle = document.getElementById('header-sub-title');
+  if (mainTitle && subTitle) {
+    mainTitle.innerText = mode === 'practice' ? 'Đề luyện tập tự chọn' : 'Đề thi thử tùy chỉnh';
+    subTitle.innerText = `Đề thi gồm ${list.length} câu hỏi ngẫu nhiên được tổng hợp theo yêu cầu.`;
+  }
+  
+  renderContent();
+  showToast(`Đã tạo bộ đề thi gồm ${list.length} câu hỏi!`);
 };
 
 // --- RENDER ACTIVE QUESTION CARD ---
@@ -491,7 +692,7 @@ function renderActiveQuestion() {
   // Update progress bar
   updateProgressBar();
 
-  // If no questions match filters
+  // Handle empty lists
   if (state.activeQuestions.length === 0) {
     qCardPlaceholder.innerHTML = `
       <div class="question-card glass" style="text-align: center; padding: 48px;">
@@ -503,7 +704,7 @@ function renderActiveQuestion() {
     return;
   }
 
-  // Ensure index is in bounds
+  // Bound checks
   if (state.currentIndex >= state.activeQuestions.length) {
     state.currentIndex = 0;
   } else if (state.currentIndex < 0) {
@@ -513,21 +714,22 @@ function renderActiveQuestion() {
   const q = state.activeQuestions[state.currentIndex];
   const qIndexInChapter = state.activeQuestions.indexOf(q) + 1;
   const isBookmarked = state.bookmarks.includes(q.id);
-  const selectedAnswers = state.userAnswers[q.id] || [];
+  
+  // Read answer from mode-specific storage
+  const selectedAnswers = (state.mode === 'practice' ? state.practiceAnswers : state.examAnswers)[q.id] || [];
   const hasAnswered = selectedAnswers.length > 0;
   
   const isMultiSelect = q.correctAnswers.length > 1;
   const isChecked = state.checkedQuestions[q.id] === true;
 
-  // Chapter name or exam grading state
-  const chapterName = q.chapter;
+  const chapterName = state.currentTab === 'custom_quiz' ? 'custom_quiz' : q.chapter;
   const isSubmitted = state.examSubmitted[chapterName] === true;
 
   // Build options HTML
   let optionsHtml = '';
   q.options.forEach(optionText => {
-    const optionPrefix = optionText.substring(0, 1); // 'A', 'B', 'C', 'D'
-    const optionCleanText = optionText.substring(3); // option text content
+    const optionPrefix = optionText.substring(0, 1);
+    const optionCleanText = optionText.substring(3);
     
     let optionClass = '';
     let disabledClass = '';
@@ -541,13 +743,13 @@ function renderActiveQuestion() {
           disabledClass = 'disabled';
           const shouldBeCorrect = q.correctAnswers.includes(optionPrefix);
           if (shouldBeCorrect) {
-            optionClass = 'correct'; // Green border (correct option)
+            optionClass = 'correct'; // green border
           } else if (isSelected) {
-            optionClass = 'incorrect'; // Red border (wrongly chosen)
+            optionClass = 'incorrect'; // red border
           }
         } else {
           if (isSelected) {
-            optionClass = 'selected'; // Blue border (not yet checked)
+            optionClass = 'selected'; // blue border
           }
         }
       } else {
@@ -572,13 +774,13 @@ function renderActiveQuestion() {
         if (hasAnswered) {
           disabledClass = 'disabled';
           if (q.correctAnswers.includes(optionPrefix)) {
-            optionClass = 'correct'; // green
+            optionClass = 'correct';
           } else if (isSelected) {
-            optionClass = 'incorrect'; // red
+            optionClass = 'incorrect';
           }
         }
       } else {
-        // Exam mode:
+        // Exam Mode
         if (isSubmitted) {
           disabledClass = 'disabled';
           if (q.correctAnswers.includes(optionPrefix)) {
@@ -649,7 +851,8 @@ window.selectOption = function(qId, optionPrefix) {
   if (!q) return;
 
   const isMultiSelect = q.correctAnswers.length > 1;
-  let selectedAnswers = state.userAnswers[qId] || [];
+  const answers = state.mode === 'practice' ? state.practiceAnswers : state.examAnswers;
+  let selectedAnswers = answers[qId] || [];
 
   if (isMultiSelect) {
     const idx = selectedAnswers.indexOf(optionPrefix);
@@ -658,15 +861,14 @@ window.selectOption = function(qId, optionPrefix) {
     } else {
       selectedAnswers.splice(idx, 1);
     }
-    state.userAnswers[qId] = selectedAnswers;
+    answers[qId] = selectedAnswers;
   } else {
-    state.userAnswers[qId] = [optionPrefix];
+    answers[qId] = [optionPrefix];
     
     // If in Practice Mode, show animation if they got it wrong
     if (state.mode === 'practice') {
       const isCorrect = q.correctAnswers.includes(optionPrefix);
       if (!isCorrect) {
-        // Add shake animation to the question card
         const card = document.getElementById('active-question-card');
         if (card) {
           card.classList.add('shake-animation');
@@ -678,7 +880,6 @@ window.selectOption = function(qId, optionPrefix) {
 
   saveStateToStorage();
   
-  // Rerender question with feedback immediately
   renderActiveQuestion();
   updateProgressBar();
 };
@@ -688,10 +889,10 @@ window.checkMultiAnswer = function(qId) {
   if (!q) return;
 
   state.checkedQuestions[qId] = true;
-  localStorage.setItem('mln_checked', JSON.stringify(state.checkedQuestions));
+  saveStateToStorage();
 
   // Verify correctness to trigger wrong answer shake animation
-  const selectedAnswers = state.userAnswers[qId] || [];
+  const selectedAnswers = state.practiceAnswers[qId] || [];
   const isCorrect = selectedAnswers.every(ans => q.correctAnswers.includes(ans)) && 
                     q.correctAnswers.every(ans => selectedAnswers.includes(ans));
   
@@ -719,7 +920,6 @@ window.toggleBookmark = function(qId) {
   }
   saveStateToStorage();
   
-  // Re-filter if we are in bookmarks tab
   if (state.currentTab === 'bookmarks') {
     updateActiveQuestions();
   }
@@ -743,7 +943,7 @@ function updateProgressBar() {
 
   let answered = 0;
   state.activeQuestions.forEach(q => {
-    const answers = state.userAnswers[q.id] || [];
+    const answers = (state.mode === 'practice' ? state.practiceAnswers : state.examAnswers)[q.id] || [];
     if (answers.length > 0) answered++;
   });
 
@@ -759,7 +959,7 @@ function renderNavGrid() {
 
   let html = '';
   state.activeQuestions.forEach((q, idx) => {
-    const answers = state.userAnswers[q.id] || [];
+    const answers = (state.mode === 'practice' ? state.practiceAnswers : state.examAnswers)[q.id] || [];
     const hasAnswered = answers.length > 0;
     
     // Evaluate correctness
@@ -778,16 +978,17 @@ function renderNavGrid() {
         if (isChecked) {
           statusClass = isCorrect ? 'correct' : 'incorrect';
         } else {
-          statusClass = 'active'; // blue border for partially answered/selected
+          statusClass = 'active'; // blue border for selected but unchecked
         }
       }
     } else {
       // Exam Mode
-      const isSubmitted = state.examSubmitted[q.chapter] === true;
+      const chapterName = state.currentTab === 'custom_quiz' ? 'custom_quiz' : q.chapter;
+      const isSubmitted = state.examSubmitted[chapterName] === true;
       if (isSubmitted) {
         statusClass = isCorrect ? 'correct' : 'incorrect';
       } else if (hasAnswered) {
-        statusClass = 'active'; // show blue if selected in exam
+        statusClass = 'active'; // show blue selected border
       }
     }
 
@@ -831,8 +1032,7 @@ function renderExamActionArea() {
     return;
   }
 
-  // Get active chapter
-  const currentChapter = TAB_MAP[state.currentTab];
+  const currentChapter = state.currentTab === 'custom_quiz' ? 'custom_quiz' : TAB_MAP[state.currentTab];
   if (!currentChapter) {
     area.innerHTML = '';
     return;
@@ -842,11 +1042,10 @@ function renderExamActionArea() {
 
   if (isSubmitted) {
     // Show exam results summary
-    const chQuestions = MLN_QUESTIONS.filter(q => q.chapter === currentChapter);
     let correct = 0;
     let answered = 0;
-    chQuestions.forEach(q => {
-      const answers = state.userAnswers[q.id] || [];
+    state.activeQuestions.forEach(q => {
+      const answers = state.examAnswers[q.id] || [];
       if (answers.length > 0) {
         answered++;
         const isCorrect = answers.every(ans => q.correctAnswers.includes(ans)) && 
@@ -857,7 +1056,7 @@ function renderExamActionArea() {
 
     area.innerHTML = `
       <div style="display: flex; align-items: center; gap: 12px;">
-        <span style="font-size: 13px; font-weight: 600; color: var(--success-color);">Kết quả: ${correct}/${chQuestions.length} câu đúng</span>
+        <span style="font-size: 13px; font-weight: 600; color: var(--success-color);">Kết quả: ${correct}/${state.activeQuestions.length} câu đúng</span>
         <button class="action-btn secondary" onclick="resetExamMode('${currentChapter}')" style="padding: 8px 16px;">Làm lại</button>
       </div>
     `;
@@ -871,14 +1070,13 @@ function renderExamActionArea() {
 
 window.submitExam = function(chapterName) {
   // Confirm submit
-  const chQuestions = MLN_QUESTIONS.filter(q => q.chapter === chapterName);
   let answered = 0;
-  chQuestions.forEach(q => {
-    const answers = state.userAnswers[q.id] || [];
+  state.activeQuestions.forEach(q => {
+    const answers = state.examAnswers[q.id] || [];
     if (answers.length > 0) answered++;
   });
 
-  const confirmSubmit = confirm(`Bạn đã trả lời ${answered}/${chQuestions.length} câu. Bạn có chắc chắn muốn nộp bài thi không?`);
+  const confirmSubmit = confirm(`Bạn đã trả lời ${answered}/${state.activeQuestions.length} câu. Bạn có chắc chắn muốn nộp bài thi không?`);
   if (!confirmSubmit) return;
 
   state.examSubmitted[chapterName] = true;
@@ -889,28 +1087,44 @@ window.submitExam = function(chapterName) {
 };
 
 window.resetExamMode = function(chapterName) {
-  const confirmReset = confirm(`Bạn muốn làm lại chương "${chapterName}" trong chế độ thi thử? Hành động này sẽ xoá các đáp án đã chọn.`);
+  const confirmReset = confirm(`Bạn muốn làm lại đề thi này? Hành động này sẽ xoá các đáp án đã chọn.`);
   if (!confirmReset) return;
 
-  // Clear answers for this chapter
-  const chQuestions = MLN_QUESTIONS.filter(q => q.chapter === chapterName);
-  chQuestions.forEach(q => {
-    delete state.userAnswers[q.id];
+  // Clear answers for the active questions
+  state.activeQuestions.forEach(q => {
+    delete state.examAnswers[q.id];
     delete state.checkedQuestions[q.id];
   });
   
-  // Clear exam submitted state
   state.examSubmitted[chapterName] = false;
   saveStateToStorage();
   
   state.currentIndex = 0;
   renderActiveQuestion();
-  showToast('Đã làm lại chương trong chế độ thi thử!');
+  showToast('Đã đặt lại bài thi!');
 };
 
 // --- RESET PROGRESS FUNCTIONS ---
 window.resetChapterProgress = function() {
   if (state.currentTab === 'dashboard') return;
+  
+  if (state.currentTab === 'custom_quiz') {
+    const confirmReset = confirm('Bạn muốn làm lại đề ôn tập tự chọn này? (Lịch sử trả lời của các câu hỏi này sẽ bị xoá)');
+    if (!confirmReset) return;
+    
+    state.activeQuestions.forEach(q => {
+      const answers = state.mode === 'practice' ? state.practiceAnswers : state.examAnswers;
+      delete answers[q.id];
+      delete state.checkedQuestions[q.id];
+    });
+    state.examSubmitted['custom_quiz'] = false;
+    
+    saveStateToStorage();
+    state.currentIndex = 0;
+    renderActiveQuestion();
+    showToast('Đã reset đề thi tùy chỉnh!');
+    return;
+  }
   
   let chapterName = '';
   let msg = '';
@@ -920,7 +1134,7 @@ window.resetChapterProgress = function() {
     msg = 'Bạn có chắc chắn muốn xoá toàn bộ câu hỏi đã lưu?';
   } else {
     chapterName = TAB_MAP[state.currentTab];
-    msg = `Bạn có chắc chắn muốn làm lại (xoá tất cả đáp án đã chọn) của chương "${chapterName}"?`;
+    msg = `Bạn có chắc chắn muốn làm lại (xoá tất cả đáp án) của chương "${chapterName}" ở chế độ hiện tại?`;
   }
 
   const confirmReset = confirm(msg);
@@ -930,28 +1144,29 @@ window.resetChapterProgress = function() {
     state.bookmarks = [];
   } else {
     const chQuestions = MLN_QUESTIONS.filter(q => q.chapter === chapterName);
+    const answers = state.mode === 'practice' ? state.practiceAnswers : state.examAnswers;
     chQuestions.forEach(q => {
-      delete state.userAnswers[q.id];
+      delete answers[q.id];
       delete state.checkedQuestions[q.id];
     });
-    // Reset exam status as well
+    // Reset exam status for this chapter
     state.examSubmitted[chapterName] = false;
   }
 
   saveStateToStorage();
   state.currentIndex = 0;
   
-  // Re-filter active questions
   updateActiveQuestions();
   renderActiveQuestion();
   showToast('Đã xoá tiến trình của phần này!');
 };
 
 window.resetAllProgress = function() {
-  const confirmReset = confirm('CẢNH BÁO: Bạn có chắc chắn muốn xoá toàn bộ tiến trình ôn tập, đáp án đã trả lời và câu hỏi đã đánh dấu trên hệ thống?');
+  const confirmReset = confirm('CẢNH BÁO: Bạn có chắc chắn muốn xoá toàn bộ tiến trình ôn tập (cả chế độ Luyện tập và Thi thử), đáp án đã trả lời và câu hỏi đã đánh dấu trên hệ thống?');
   if (!confirmReset) return;
 
-  state.userAnswers = {};
+  state.practiceAnswers = {};
+  state.examAnswers = {};
   state.bookmarks = [];
   state.examSubmitted = {};
   state.checkedQuestions = {};
