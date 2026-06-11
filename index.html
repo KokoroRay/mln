@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ôn thi Trắc nghiệm Triết học Mác - Lênin (MLN111)</title>
+  <meta name="description" content="Ứng dụng web ôn thi trắc nghiệm môn Triết học Mác - Lênin (MLN111) với đầy đủ 423 câu hỏi chia theo từng chương, chế độ thi thử và lưu câu hỏi.">
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- SEO Meta Tags -->
+  <meta property="og:title" content="Ôn thi Trắc nghiệm Triết học Mác - Lênin (MLN111)">
+  <meta property="og:description" content="Học trắc nghiệm MLN111 miễn phí với đáp án chính xác, phân chia theo chương, lưu câu hỏi khó và làm bài thi thử.">
+  <meta property="og:type" content="website">
+  
+  <!-- Add unique IDs for browser testing -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="logo-container">
+        <div class="logo-icon">M</div>
+        <div class="logo-text">
+          <h1>MLN111</h1>
+          <p>Trắc nghiệm Triết học</p>
+        </div>
+      </div>
+      
+      <nav class="nav-menu">
+        <li class="nav-item active" data-tab="dashboard" id="tab-dashboard">
+          <button><span class="icon">📊</span> Tổng quan</button>
+        </li>
+        <li class="nav-item" data-tab="c0" id="tab-c0">
+          <button><span class="icon">📝</span> Đề cương chung</button>
+        </li>
+        <li class="nav-item" data-tab="c1" id="tab-c1">
+          <button><span class="icon">📖</span> Chương 1</button>
+        </li>
+        <li class="nav-item" data-tab="c2" id="tab-c2">
+          <button><span class="icon">💡</span> Chương 2</button>
+        </li>
+        <li class="nav-item" data-tab="c3" id="tab-c3">
+          <button><span class="icon">⚖️</span> Chương 3</button>
+        </li>
+        <li class="nav-item" data-tab="bookmarks" id="tab-bookmarks">
+          <button><span class="icon">⭐</span> Câu đã lưu</button>
+        </li>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <button class="theme-toggle-btn" id="theme-toggle" title="Thay đổi giao diện sáng/tối">
+          <span class="icon">☀️</span> Chế độ Sáng
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Top Content Header -->
+      <header class="content-header">
+        <div class="header-title">
+          <h2 id="header-main-title">Trắc nghiệm MLN111</h2>
+          <p id="header-sub-title">Chào mừng bạn đến với hệ thống ôn tập kiến thức Triết học Mác - Lênin.</p>
+        </div>
+        
+        <!-- Controls area: populated dynamically for quiz search, filters and modes -->
+        <div id="header-actions-area"></div>
+      </header>
+
+      <!-- Dynamic Content Body -->
+      <div id="main-content-area">
+        <!-- Dashboard or Quiz is injected here -->
+      </div>
+      
+    </main>
+    
+  </div>
+
+  <!-- Inject quiz data -->
+  <script src="questions.js"></script>
+  <!-- Inject application logic -->
+  <script src="app.js"></script>
+</body>
+</html>
